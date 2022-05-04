@@ -14,16 +14,22 @@ def num_opt_even_weight_paths(graph, s):
     '''
 
     num_even_paths = {}
-    path_lengths = {s: 0}
+    path_lengths = {}
+
 
     for n in graph.keys():
-        e = even(graph, s, n)
-        o = odd(graph, s, n)
+        path_lengths[n] = even(graph, s, n)
 
-        if (e < o):path_lengths[n] = e
-        else: path_lengths[n] = o
+    for n in graph.keys():
+        if True:
+            if n in num_even_paths.keys():
+                num_even_paths[n] += 1
+            else:
+                num_even_paths[n] = 1
 
-    return path_lengths
+    num_even_paths[s] = 1
+
+    return num_even_paths
 
 
 
@@ -31,32 +37,54 @@ def num_opt_even_weight_paths(graph, s):
 
 def even(graph, s, u):
     if u in graph[s] and graph[s][u] % 2 == 0: return graph[s][u]
-
+    if graph[s] == {}: return 0.1
+    paths = set()
     for n in graph[s]:
         if graph[s][n] % 2 == 0:
-            return graph[s][n] + even(graph, n, u)
-        return graph[s][n] + odd(graph, n, u)
+            paths.add(graph[s][n] + even(graph, n, u))
+        else:
+            paths.add(graph[s][n] + odd(graph, n, u))
+
+    finalpaths = set()
+    for p in paths:
+        if p % 2 == 0:
+            finalpaths.add(p)
+
+    if finalpaths:
+        return min(finalpaths)
+    else:
+        return 0
 
 
 
 
 def odd(graph, s, u):
     if u in graph[s] and graph[s][u] % 2 == 1: return graph[s][u]
-
+    if graph[s] == {}: return 0.1
+    paths = set()
     for n in graph[s]:
         if graph[s][n] % 2 == 0:
-            return graph[s][n] + even(graph, n, u)
-        return graph[s][n] + odd(graph, n, u)
+            paths.add(graph[s][n] + even(graph, n, u))
+        else:
+            paths.add(graph[s][n] + odd(graph, n, u))
+    finalpaths = set()
+    for p in paths:
+        if p % 2 == 1:
+            finalpaths.add(p)
 
-    return 0
+    if finalpaths:
+        return min(finalpaths)
+    else: return 0
+
 
 
 
 if __name__ == "__main__":
-    # num_opt_even_weight_paths({"a":{"b":3, "c":5}, "b":{"c":3}, "c":{}}, "a")
+    print(num_opt_even_weight_paths({"a":{"b":3, "c":5}, "b":{"c":3}, "c":{}}, "a"))
     # should return {"a":1, "b":0, "c":1}
 
     # num_opt_even_weight_paths({"a":{"b":3, "c":5, "d":2}, "b":{"c":3}, "d":{"c":4}, "c":{}}, "a")
     # should return {"a":1, "b":0, "c":2}
 
-    print(even({"a":{"b":6, "c":5}, "b":{"c":3}, "c":{}}, "a", "c"))
+    # print(even({"a":{"b":3, "c":5, "d":2}, "b":{"c":3}, "d":{"c":4}, "c":{}}, "a", "d"))
+
