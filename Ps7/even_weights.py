@@ -22,27 +22,31 @@ def num_opt_even_weight_paths(graph, s):
     num_even_paths = {}
     num_odd_paths = {}
     path_lengths = {}
+    path_lengths2 = {}
     neighbors = {}
 
 
 
 
     for n in graph.keys():
-        path_lengths[n] = even(graph, s, n)
         neighbors[n] = {}
-        path_lengths_odd[n] = {}
-        path_lengths_even[n] = {}
-
-
-    print("paht lengths", path_lengths)
 
 
     for n in graph.keys():
         for m in graph[n]:
             neighbors[m][n] = graph[n][m]
 
-            path_lengths_odd[n][m] = 0.1
-            path_lengths_even[n][m] = 0.1
+
+    for n in graph.keys():
+        path_lengths2[n] = odd(graph, s, n, neighbors)
+        path_lengths[n] = even(graph, s, n, neighbors)
+
+    #print("*", path_lengths2)
+    #print("&", neighbors)
+    #print("^", path_lengths_even, path_lengths_odd)
+
+    path_lengths_even[s] = 0
+    path_lengths_odd[s] = 99999
 
 
 
@@ -59,13 +63,13 @@ def num_even(graph, s, u, neighbors):
         return 1
     num_even_paths = 0
     for n in neighbors[u]:
-        print('~~~~~~~~~~~debug', path_lengths_odd[s])
-        if neighbors[u][n] % 2 == 0 and path_lengths_even[s][n] + neighbors[u][n] == path_lengths_even[s][u]:
-            print("nodes", s, u)
+
+        if neighbors[u][n] % 2 == 0 and path_lengths_even[n] + neighbors[u][n] == path_lengths_even[u]:
+
             num_even_paths += num_even(graph, s, n, neighbors)
 
-        if neighbors[u][n] % 2 == 1 and path_lengths_odd[s][n] + neighbors[u][n] == path_lengths_even[s][u]:
-            print("nodes", s, u)
+        if neighbors[u][n] % 2 == 1 and path_lengths_odd[n] + neighbors[u][n] == path_lengths_even[u]:
+
             num_even_paths += num_odd(graph, s, n, neighbors)
     return num_even_paths
 
@@ -78,11 +82,9 @@ def num_odd(graph, s, u, neighbors):
     num_odd_paths = 0
     for n in neighbors[u]:
 
-        if neighbors[u][n] % 2 == 1:
-            if path_lengths_even[s][n] + neighbors[u][n] == path_lengths_odd[s][u]:
+        if neighbors[u][n] % 2 == 1 and path_lengths_even[n] + neighbors[u][n] == path_lengths_odd[u]:
                 num_odd_paths += num_even(graph, s, n, neighbors)
-        if neighbors[u][n] % 2 == 0:
-            if path_lengths_odd[s][n] + neighbors[u][n] == path_lengths_odd[s][u]:
+        if neighbors[u][n] % 2 == 0 and path_lengths_odd[n] + neighbors[u][n] == path_lengths_odd[u]:
                 num_odd_paths += num_odd(graph, s, n, neighbors)
 
     return num_odd_paths
@@ -91,95 +93,79 @@ def num_odd(graph, s, u, neighbors):
 
 
 
-def even(graph, s, u):
+def even(graph, s, u, neighbors):
     global path_lengths_even
 
     if u in graph[s] and graph[s][u] % 2 == 0:
-        print('shortcut', graph[s][u])
-        return graph[s][u]
-    if graph[s] == {}: return 0.1
+        x = graph[s][u]
+        path_lengths_even[u] = x
+        return x
+
     paths = set()
-    if s in path_lengths_even.keys() and u in path_lengths_even[s].keys():
-        return path_lengths_even[s][u]
-    for n in graph[s]:
-        print("pEven", path_lengths_even)
-
-        if graph[s][n] % 2 == 0:
-            x = graph[s][n] + even(graph, n, u)
-            print('result', x)
-            paths.add(x)
-
-        else:
-            x = graph[s][n] + odd(graph, n, u)
-            print('result2', x)
-            paths.add(x)
+    if u in path_lengths_even.keys():
+        return path_lengths_even[u]
 
 
-    finalpaths = set()
+    for n in neighbors[u]:
 
-    for p in paths:
-        if p % 2 == 0:
-            finalpaths.add(p)
-    print("even", paths, s, u)
-    if finalpaths:
-        print("finalE", finalpaths)
-        x = min(finalpaths)
-        if s not in path_lengths_even.keys():
-            path_lengths_even[s] = {}
+        if neighbors[u][n] % 2 == 0:
+            paths.add(even(graph, s, n, neighbors) + neighbors[u][n])
 
-        path_lengths_even[s][u] = x
 
+        if neighbors[u][n] % 2 == 1:
+
+            paths.add(odd(graph, s, n, neighbors) + neighbors[u][n])
+
+
+
+
+
+    if paths:
+        x = min(paths)
+        path_lengths_even[u] = x
         return x
     else:
-        print('helpE')
-        return 0.1
+
+        return 0
 
 
-
-
-def odd(graph, s, u):
+def odd(graph, s, u, neighbors):
     global path_lengths_odd
 
-    if u in graph[s] and graph[s][u] % 2 == 1: return graph[s][u]
-    if graph[s] == {}: return 0.1
+    if u in graph[s] and graph[s][u] % 2 == 1:
+        x = graph[s][u]
+        path_lengths_odd[u] = x
+        return x
     paths = set()
-    if s in path_lengths_odd.keys() and u in path_lengths_odd[s].keys():
-        return path_lengths_odd[s][u]
+    if u in path_lengths_odd.keys():
+        return path_lengths_odd[u]
 
-    for n in graph[s]:
-        print("pOdd", path_lengths_odd)
-        if graph[s][n] % 2 == 0:
-            paths.add(graph[s][n] + even(graph, n, u))
-        else:
-            paths.add(graph[s][n] + odd(graph, n, u))
+    for n in neighbors[u]:
+
+        if neighbors[u][n] % 2 == 1:
+            paths.add(even(graph, s, n, neighbors) + neighbors[u][n])
+
+        if neighbors[u][n] % 2 == 0:
+            paths.add(odd(graph, s, n, neighbors) + neighbors[u][n])
 
 
-    finalpaths = set()
-    for p in paths:
-        if p % 2 == 1:
-            finalpaths.add(p)
-    print("odd", paths, s, u)
-    if finalpaths:
-        print("finalO", finalpaths)
-        x = min(finalpaths)
-        if s not in path_lengths_odd.keys():
-            path_lengths_odd[s] = {}
 
-        path_lengths_odd[s][u] = x
-
+    if paths:
+        x = min(paths)
+        path_lengths_odd[u] = x
         return x
     else:
-        print('helpO')
-        return 0.1
+
+        return float("inf")
 
 
 
 
 if __name__ == "__main__":
-     print(num_opt_even_weight_paths({"a":{"b":3, "c":5}, "b":{"c":3}, "c":{}}, "a"))
+    # print(num_opt_even_weight_paths({"a":{"b":3, "c":5}, "b":{"c":3}, "c":{}}, "a"))
     # should return {"a":1, "b":0, "c":1}
 
-    # print(num_opt_even_weight_paths({"a":{"b":3, "c":5, "d":2}, "b":{"c":3}, "d":{"c":4}, "c":{}}, "a"))
+    print(num_opt_even_weight_paths({"a":{"b":3, "c":5, "d":2}, "b":{"c":3}, "d":{"c":4}, "c":{}}, "a"))
     # should return {"a":1, "b":0, "c":2}
 
     # print(even({"a":{"b":3, "c":5}, "b":{"c":3}, "c":{}}, "a", "c"))
