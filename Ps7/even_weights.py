@@ -1,4 +1,6 @@
+global num_even_paths, path_num_odd, path_num_even, neighbors
 def num_opt_even_weight_paths(graph, s):
+    global path_num_odd, path_num_even
     '''
     The num_opt_even_weight_paths function should return a dictionary mapping node v to the number of optimal
     paths of even weight from s to v.
@@ -14,33 +16,72 @@ def num_opt_even_weight_paths(graph, s):
     '''
 
     num_even_paths = {}
+    num_odd_paths = {}
     path_lengths = {}
+    neighbors = {}
+    path_num_odd = {}
+    path_num_even = {}
 
 
     for n in graph.keys():
         path_lengths[n] = even(graph, s, n)
+        neighbors[n] = {}
 
     for n in graph.keys():
-        if True:
-            if n in num_even_paths.keys():
-                num_even_paths[n] += 1
-            else:
-                num_even_paths[n] = 1
+        for m in graph[n]:
+            neighbors[m][n] = graph[n][m]
 
-    num_even_paths[s] = 1
+    for n in graph.keys():
+        num_even_paths[n] = num_even(graph, s, n, neighbors)
 
     return num_even_paths
+
+
+def num_even(graph, s, u, neighbors):
+    if s==u:
+        return 1
+    num_even_paths = 0
+    for n in neighbors[u]:
+
+        if neighbors[u][n] % 2 == 0 and even(graph, s, n) + neighbors[u][n] == even(graph, s, u):
+
+            num_even_paths += num_even(graph, s, n, neighbors)
+        if neighbors[u][n] % 2 == 1 and odd(graph, s, n) + neighbors[u][n] == even(graph, s, u):
+
+            num_even_paths += num_odd(graph, s, n, neighbors)
+    return num_even_paths
+
+
+
+def num_odd(graph, s, u, neighbors):
+
+    if s==u:
+        return 1
+    num_odd_paths = 0
+    for n in neighbors[u]:
+
+        if neighbors[u][n] % 2 == 1:
+            if even(graph, s, n) + neighbors[u][n] == odd(graph, s, u):
+                num_odd_paths += num_even(graph, s, n, neighbors)
+        if neighbors[u][n] % 2 == 0:
+            if odd(graph, s, n) + neighbors[u][n] == odd(graph, s, u):
+                num_odd_paths += num_odd(graph, s, n, neighbors)
+
+    return num_odd_paths
 
 
 
 
 
 def even(graph, s, u):
+    global path_num_even
     if u in graph[s] and graph[s][u] % 2 == 0: return graph[s][u]
     if graph[s] == {}: return 0.1
     paths = set()
     for n in graph[s]:
-        if graph[s][n] % 2 == 0:
+        if s in path_num_even.keys() and n in path_num_even[s].keys():
+            paths.add(path_num_even[s][n])
+        elif graph[s][n] % 2 == 0:
             paths.add(graph[s][n] + even(graph, n, u))
         else:
             paths.add(graph[s][n] + odd(graph, n, u))
@@ -51,7 +92,11 @@ def even(graph, s, u):
             finalpaths.add(p)
 
     if finalpaths:
-        return min(finalpaths)
+        x = min(finalpaths)
+        if s not in path_num_even.keys():
+            path_num_even[s] = {}
+        path_num_even[s][n] = x
+        return x
     else:
         return 0
 
@@ -59,11 +104,16 @@ def even(graph, s, u):
 
 
 def odd(graph, s, u):
+    global path_num_odd
+
     if u in graph[s] and graph[s][u] % 2 == 1: return graph[s][u]
     if graph[s] == {}: return 0.1
     paths = set()
     for n in graph[s]:
-        if graph[s][n] % 2 == 0:
+        if s in path_num_odd.keys() and n in path_num_odd[s].keys():
+            paths.add(path_num_odd[s][n])
+
+        elif graph[s][n] % 2 == 0:
             paths.add(graph[s][n] + even(graph, n, u))
         else:
             paths.add(graph[s][n] + odd(graph, n, u))
@@ -73,7 +123,11 @@ def odd(graph, s, u):
             finalpaths.add(p)
 
     if finalpaths:
-        return min(finalpaths)
+        x = min(finalpaths)
+        if s not in path_num_odd.keys():
+            path_num_odd[s] = {}
+        path_num_odd[s][n] = x
+        return x
     else: return 0
 
 
